@@ -35,9 +35,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
- * \see Documentation: https://ef.gy/documentation/prometheus-client-cpp
- * \see Source Code: https://github.com/jyujin/prometheus-client-cpp
- * \see Licence Terms: https://github.com/jyujin/prometheus-client-cpp/COPYING
+ * \see Documentation: https://ef.gy/documentation/imperiald
+ * \see Source Code: https://github.com/jyujin/imperiald
+ * \see Licence Terms: https://github.com/jyujin/imperiald/COPYING
  */
 
 #define ASIO_DISABLE_THREADS
