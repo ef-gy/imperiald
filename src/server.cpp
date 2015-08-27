@@ -42,11 +42,14 @@
 
 #define ASIO_DISABLE_THREADS
 #include <prometheus/http.h>
+#include <imperiald/procfs-linux.h>
 
 using namespace efgy;
 using namespace prometheus;
 using asio::ip::tcp;
 using asio::local::stream_protocol;
+
+static imperiald::linux::stat<> linux_procfs_stats(1);
 
 /**\brief Hello World request handler
  *
