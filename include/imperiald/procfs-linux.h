@@ -41,8 +41,8 @@ template <typename T = long long>
 class stat : public prometheus::collector::hub {
 public:
   stat(const T &updateInterval,
-       prometheus::collector::registry &pRegistry =
-         prometheus::collector::registry::common(),
+       prometheus::collector::registry<prometheus::collector::base> &pRegistry =
+         prometheus::collector::registry<prometheus::collector::base>::common(),
        const std::string &prefix = "system_",
        const std::string &pFile = "/proc/stat")
     : file(pFile),
