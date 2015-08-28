@@ -42,35 +42,33 @@ class stat : public prometheus::collector::hub {
 public:
   stat(const T &updateInterval,
        prometheus::collector::registry<prometheus::collector::base> &pRegistry =
-         prometheus::collector::registry<prometheus::collector::base>::common(),
+           prometheus::collector::registry<
+               prometheus::collector::base>::common(),
        const std::string &prefix = "system_",
        const std::string &pFile = "/proc/stat")
-    : file(pFile),
-      prometheus::collector::hub(prefix + "linux_procfs_stats", pRegistry,
-      "hub"),
-      bootTime(prefix + "boot_time_seconds", pRegistry),
-      contextSwitches(prefix + "context_switches_total", pRegistry),
-      interrupts(prefix + "interrupts_total", pRegistry),
-      processes(prefix + "forks_total", pRegistry),
-      runningProcesses(prefix + "running_processes", pRegistry),
-      blockedProcesses(prefix + "blocked_processes", pRegistry),
-      userCPUTime(prefix + "cpu_user_user_hz", pRegistry),
-      niceCPUTime(prefix + "cpu_nice_user_hz", pRegistry),
-      systemCPUTime(prefix + "cpu_system_user_hz", pRegistry),
-      idleCPUTime(prefix + "cpu_idle_user_hz", pRegistry),
-      pageIn(prefix + "page_in_pages", pRegistry),
-      pageOut(prefix + "page_out_pages", pRegistry),
-      swapIn(prefix + "swap_in_pages", pRegistry),
-      swapOut(prefix + "swap_out_pages", pRegistry),
-      stop(false)
-    {
-      updateThread = std::thread([this, updateInterval]() {
-        while(!stop) {
-          update();
-          std::this_thread::sleep_for(std::chrono::seconds(updateInterval));
-        }
-      });
-    }
+      : file(pFile), prometheus::collector::hub(prefix + "linux_procfs_stats",
+                                                pRegistry, "hub"),
+        bootTime(prefix + "boot_time_seconds", pRegistry),
+        contextSwitches(prefix + "context_switches_total", pRegistry),
+        interrupts(prefix + "interrupts_total", pRegistry),
+        processes(prefix + "forks_total", pRegistry),
+        runningProcesses(prefix + "running_processes", pRegistry),
+        blockedProcesses(prefix + "blocked_processes", pRegistry),
+        userCPUTime(prefix + "cpu_user_user_hz", pRegistry),
+        niceCPUTime(prefix + "cpu_nice_user_hz", pRegistry),
+        systemCPUTime(prefix + "cpu_system_user_hz", pRegistry),
+        idleCPUTime(prefix + "cpu_idle_user_hz", pRegistry),
+        pageIn(prefix + "page_in_pages", pRegistry),
+        pageOut(prefix + "page_out_pages", pRegistry),
+        swapIn(prefix + "swap_in_pages", pRegistry),
+        swapOut(prefix + "swap_out_pages", pRegistry), stop(false) {
+    updateThread = std::thread([this, updateInterval]() {
+      while (!stop) {
+        update();
+        std::this_thread::sleep_for(std::chrono::seconds(updateInterval));
+      }
+    });
+  }
 
   ~stat() {
     stop = true;
@@ -86,7 +84,7 @@ public:
   }
 
 protected:
-  bool update (void) {
+  bool update(void) {
     std::ifstream i(file);
     std::string line;
 

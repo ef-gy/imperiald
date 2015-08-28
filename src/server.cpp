@@ -111,44 +111,34 @@ int main(int argc, char *argv[]) {
       return 1;
     }
 
-    tcp::resolver resolver(io::service::common().get());
-
     for (unsigned int i = 1; i < argc; i++) {
       static const std::regex http("http:(.+):([0-9]+)");
       static const std::regex httpSocket("http:unix:(.+)");
       std::smatch matches;
 
       if (std::regex_match(std::string(argv[i]), matches, httpSocket)) {
-        std::string socket = matches[1];
+        targets += net::endpoint<stream_protocol>(matches[1]).with(
+            [](stream_protocol::endpoint &endpoint) -> bool {
+              net::http::server<stream_protocol> *s =
+                  new net::http::server<stream_protocol>(endpoint);
 
-        stream_protocol::endpoint endpoint(socket);
-        net::http::server<stream_protocol> *s =
-            new net::http::server<stream_protocol>(endpoint);
+              s->processor.add("^/$", hello<stream_protocol>);
+              s->processor.add("^/quit$", quit<stream_protocol>);
+              s->processor.add(http::regex, http::common<stream_protocol>);
 
-        s->processor.add("^/$", hello<stream_protocol>);
-        s->processor.add("^/quit$", quit<stream_protocol>);
-        s->processor.add(http::regex, http::common<stream_protocol>);
-
-        targets++;
+              return true;
+            });
       } else if (std::regex_match(std::string(argv[i]), matches, http)) {
-        std::string host = matches[1];
-        std::string port = matches[2];
+        targets += net::endpoint<tcp>(matches[1], matches[2]).with(
+            [](tcp::endpoint &endpoint) -> bool {
+              net::http::server<tcp> *s = new net::http::server<tcp>(endpoint);
 
-        tcp::resolver::query query(host, port);
-        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-        tcp::resolver::iterator end;
+              s->processor.add("^/$", hello<tcp>);
+              s->processor.add("^/quit$", quit<tcp>);
+              s->processor.add(http::regex, http::common<tcp>);
 
-        if (endpoint_iterator != end) {
-          tcp::endpoint endpoint = *endpoint_iterator;
-          net::http::server<tcp> *s =
-              new net::http::server<tcp>(endpoint);
-
-          s->processor.add("^/$", hello<tcp>);
-          s->processor.add("^/quit$", quit<tcp>);
-          s->processor.add(http::regex, http::common<tcp>);
-
-          targets++;
-        }
+              return true;
+            });
       } else {
         std::cerr << "Argument not recognised: " << argv[i] << "\n";
       }
@@ -159,11 +149,9 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
-  }
-  catch (std::exception & e) {
+  } catch (std::exception &e) {
     std::cerr << "Exception: " << e.what() << "\n";
-  }
-  catch (std::system_error & e) {
+  } catch (std::system_error &e) {
     std::cerr << "System Error: " << e.what() << "\n";
   }
 
