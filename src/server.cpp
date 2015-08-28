@@ -90,6 +90,20 @@ static bool quit(typename net::http::server<transport>::session &session,
   return true;
 }
 
+template <class sock>
+static std::size_t setup(net::endpoint<sock> lookup,
+                         io::service &service = io::service::common()) {
+  return lookup.with([&service](typename sock::endpoint &endpoint) -> bool {
+    net::http::server<sock> *s = new net::http::server<sock>(endpoint, service);
+
+    s->processor.add("^/$", hello<sock>);
+    s->processor.add("^/quit$", quit<sock>);
+    s->processor.add(http::regex, http::common<sock>);
+
+    return true;
+  });
+}
+
 /**\brief Main function for the HTTP/IRC demo
  *
  * Main function for the network server hello world programme.
@@ -117,28 +131,9 @@ int main(int argc, char *argv[]) {
       std::smatch matches;
 
       if (std::regex_match(std::string(argv[i]), matches, httpSocket)) {
-        targets += net::endpoint<stream_protocol>(matches[1]).with(
-            [](stream_protocol::endpoint &endpoint) -> bool {
-              net::http::server<stream_protocol> *s =
-                  new net::http::server<stream_protocol>(endpoint);
-
-              s->processor.add("^/$", hello<stream_protocol>);
-              s->processor.add("^/quit$", quit<stream_protocol>);
-              s->processor.add(http::regex, http::common<stream_protocol>);
-
-              return true;
-            });
+        targets += setup(net::endpoint<stream_protocol>(matches[1]));
       } else if (std::regex_match(std::string(argv[i]), matches, http)) {
-        targets += net::endpoint<tcp>(matches[1], matches[2]).with(
-            [](tcp::endpoint &endpoint) -> bool {
-              net::http::server<tcp> *s = new net::http::server<tcp>(endpoint);
-
-              s->processor.add("^/$", hello<tcp>);
-              s->processor.add("^/quit$", quit<tcp>);
-              s->processor.add(http::regex, http::common<tcp>);
-
-              return true;
-            });
+        targets += setup(net::endpoint<tcp>(matches[1], matches[2]));
       } else {
         std::cerr << "Argument not recognised: " << argv[i] << "\n";
       }
