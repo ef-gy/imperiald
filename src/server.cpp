@@ -94,7 +94,7 @@ static bool quit(typename net::http::server<transport>::session &session,
 template <class sock>
 static std::size_t setup(net::endpoint<sock> lookup,
                          io::service &service = io::service::common()) {
-  return lookup.with([&service](typename sock::endpoint &endpoint) -> bool {
+  return lookup.with([&service](typename sock::endpoint & endpoint)->bool {
     net::http::server<sock> *s = new net::http::server<sock>(endpoint, service);
 
     s->processor.add("^/$", hello<sock>);
@@ -105,11 +105,11 @@ static std::size_t setup(net::endpoint<sock> lookup,
   });
 }
 
-static cli::option oHTTPSocket(std::regex("http:unix:(.+)"), [](std::smatch &m)->bool {
+static cli::option oHTTPSocket("http:unix:(.+)", [](std::smatch &m)->bool {
   return setup(net::endpoint<stream_protocol>(m[1])) > 0;
 });
 
-static cli::option oHTTP(std::regex("http:(.+):([0-9]+)"), [](std::smatch &m)->bool {
+static cli::option oHTTP("http:(.+):([0-9]+)", [](std::smatch &m)->bool {
   return setup(net::endpoint<tcp>(m[1], m[2])) > 0;
 });
 
@@ -127,19 +127,16 @@ static cli::option oHTTP(std::regex("http:(.+):([0-9]+)"), [](std::smatch &m)->b
  */
 int main(int argc, char *argv[]) {
   try {
-    int targets = 0;
+    int rv = cli::options<cli::option>::common().apply(argc, argv) == 0;
 
-    if (cli::options<cli::option>::common().apply(argc, argv) > 0) {
-      io::service::common().run();
-    } else {
-      std::cerr << "Usage: server [http:<host>:<port>|http:unix:<path>]...\n";
-      return 1;
-    }
+    io::service::common().run();
 
-    return 0;
-  } catch (std::exception &e) {
+    return rv;
+  }
+  catch (std::exception & e) {
     std::cerr << "Exception: " << e.what() << "\n";
-  } catch (std::system_error &e) {
+  }
+  catch (std::system_error & e) {
     std::cerr << "System Error: " << e.what() << "\n";
   }
 
