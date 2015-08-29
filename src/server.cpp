@@ -43,6 +43,7 @@
 #define ASIO_DISABLE_THREADS
 #include <prometheus/http.h>
 #include <imperiald/procfs-linux.h>
+#include <ef.gy/cli.h>
 
 using namespace efgy;
 using namespace prometheus;
@@ -104,6 +105,14 @@ static std::size_t setup(net::endpoint<sock> lookup,
   });
 }
 
+static cli::option oHTTPSocket(std::regex("http:unix:(.+)"), [](std::smatch &m)->bool {
+  return setup(net::endpoint<stream_protocol>(m[1])) > 0;
+});
+
+static cli::option oHTTP(std::regex("http:(.+):([0-9]+)"), [](std::smatch &m)->bool {
+  return setup(net::endpoint<tcp>(m[1], m[2])) > 0;
+});
+
 /**\brief Main function for the HTTP/IRC demo
  *
  * Main function for the network server hello world programme.
@@ -120,27 +129,11 @@ int main(int argc, char *argv[]) {
   try {
     int targets = 0;
 
-    if (argc < 2) {
+    if (cli::options<cli::option>::common().apply(argc, argv) > 0) {
+      io::service::common().run();
+    } else {
       std::cerr << "Usage: server [http:<host>:<port>|http:unix:<path>]...\n";
       return 1;
-    }
-
-    for (unsigned int i = 1; i < argc; i++) {
-      static const std::regex http("http:(.+):([0-9]+)");
-      static const std::regex httpSocket("http:unix:(.+)");
-      std::smatch matches;
-
-      if (std::regex_match(std::string(argv[i]), matches, httpSocket)) {
-        targets += setup(net::endpoint<stream_protocol>(matches[1]));
-      } else if (std::regex_match(std::string(argv[i]), matches, http)) {
-        targets += setup(net::endpoint<tcp>(matches[1], matches[2]));
-      } else {
-        std::cerr << "Argument not recognised: " << argv[i] << "\n";
-      }
-    }
-
-    if (targets > 0) {
-      io::service::common().run();
     }
 
     return 0;
