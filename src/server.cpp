@@ -1,18 +1,19 @@
 /**\file
  * \ingroup example-programmes
- * \brief "Hello World" HTTP Server
+ * \brief imperiald main Server
  *
- * An example HTTP server that serves a simple "Hello World!" on /, and a 404 on
- * all other resources.
+ * An example HTTP server that only serves /metrics and a 404 on all other
+ * resources.
  *
  * Call it like this:
  * \code
- * $ ./hello http:localhost:8080
+ * $ ./server http:localhost:8080
  * \endcode
  *
  * With localhost and 8080 being a host name and port of your choosing. Then,
  * while the programme is running, open a browser and go to
- * http://localhost:8080/ and you should see the familiar greeting.
+ * http://localhost:8080/metrics and you should see the rather small list of
+ * metrics.
  *
  * \copyright
  * Copyright (c) 2015, Magnus Achim Deininger <magnus@ef.gy>
@@ -40,105 +41,16 @@
  * \see Licence Terms: https://github.com/jyujin/imperiald/COPYING
  */
 
-#define ASIO_DISABLE_THREADS
-#include <prometheus/http.h>
+#include <prometheus/httpd.h>
 #include <imperiald/procfs-linux.h>
-#include <ef.gy/cli.h>
 
 using namespace efgy;
-using namespace prometheus;
-using asio::ip::tcp;
-using asio::local::stream_protocol;
 
 static imperiald::linux::stat<> linux_procfs_stats(1);
 
-/**\brief Hello World request handler
- *
- * This function serves the familiar "Hello World!" when called.
- *
- * \param[out] session The HTTP session to answer on.
- *
- * \returns true (always, as we always reply).
- */
-template <class transport>
-static bool hello(typename net::http::server<transport>::session &session,
-                  std::smatch &) {
-  session.reply(200, "Hello World!");
+static httpd::servlet<asio::ip::tcp> TCPQuit("^/quit$",
+                                             httpd::quit<asio::ip::tcp>);
+static httpd::servlet<asio::local::stream_protocol>
+    unixQuit("^/quit$", httpd::quit<asio::local::stream_protocol>);
 
-  return true;
-}
-
-/**\brief Hello World request handler for /quit
- *
- * When this handler is invoked, it stops the ASIO IO handler (after replying,
- * maybe...).
- *
- * \note Having this on your production server in this exact way is PROBABLY a
- *       really bad idea, unless you gate it in an upstream forward proxy. Or
- *       you have some way of automatically respawning your server. Or both.
- *
- * \param[out] session The HTTP session to answer on.
- *
- * \returns true (always, as we always reply).
- */
-template <class transport>
-static bool quit(typename net::http::server<transport>::session &session,
-                 std::smatch &) {
-  session.reply(200, "Good-Bye, Cruel World!");
-
-  session.server.io.get().stop();
-
-  return true;
-}
-
-template <class sock>
-static std::size_t setup(net::endpoint<sock> lookup,
-                         io::service &service = io::service::common()) {
-  return lookup.with([&service](typename sock::endpoint & endpoint)->bool {
-    net::http::server<sock> *s = new net::http::server<sock>(endpoint, service);
-
-    s->processor.add("^/$", hello<sock>);
-    s->processor.add("^/quit$", quit<sock>);
-    s->processor.add(http::regex, http::common<sock>);
-
-    return true;
-  });
-}
-
-static cli::option oHTTPSocket("http:unix:(.+)", [](std::smatch &m)->bool {
-  return setup(net::endpoint<stream_protocol>(m[1])) > 0;
-});
-
-static cli::option oHTTP("http:(.+):([0-9]+)", [](std::smatch &m)->bool {
-  return setup(net::endpoint<tcp>(m[1], m[2])) > 0;
-});
-
-/**\brief Main function for the HTTP/IRC demo
- *
- * Main function for the network server hello world programme.
- *
- * Sets up server(s) as per the given command line arguments. Invalid arguments
- * are ignored.
- *
- * \param[in] argc Process argument count.
- * \param[in] argv Process argument vector
- *
- * \returns 0 when nothing bad happened, 1 otherwise.
- */
-int main(int argc, char *argv[]) {
-  try {
-    int rv = cli::options<cli::option>::common().apply(argc, argv) == 0;
-
-    io::service::common().run();
-
-    return rv;
-  }
-  catch (std::exception & e) {
-    std::cerr << "Exception: " << e.what() << "\n";
-  }
-  catch (std::system_error & e) {
-    std::cerr << "System Error: " << e.what() << "\n";
-  }
-
-  return 1;
-}
+int main(int argc, char *argv[]) { return io::main(argc, argv); }
