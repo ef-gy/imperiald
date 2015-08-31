@@ -134,6 +134,59 @@ protected:
   prometheus::metric::gauge<T> swaps;
   std::thread updateThread;
 };
+
+template <typename T = long long>
+class meminfo : public prometheus::collector::hub {
+public:
+  meminfo(const T &updateInterval,
+          prometheus::collector::registry<prometheus::collector::base> &
+              pRegistry = prometheus::collector::registry<
+                  prometheus::collector::base>::common(),
+          const std::string &pFile = "/proc/meminfo")
+      : file(pFile), prometheus::collector::hub(pRegistry),
+        mem("system_memory_kibibytes", {"property"}, *this) {
+    updateThread = std::thread([this, updateInterval]() {
+      while (!stop) {
+        update();
+        std::this_thread::sleep_for(std::chrono::seconds(updateInterval));
+      }
+    });
+  }
+
+  ~meminfo() {
+    stop = true;
+    updateThread.join();
+  }
+
+protected:
+  bool update(void) {
+    std::ifstream i(file);
+    std::string line;
+
+    while (std::getline(i, line)) {
+      static std::regex mi("(.*):\\s+([0-9]+)\\s+kB");
+      std::smatch matches;
+      if (std::regex_match(line, matches, mi)) {
+        mem.labels({matches[1]}).set(asNumber(matches[2]));
+      }
+    }
+
+    return true;
+  }
+
+  static T asNumber(const std::string &s) {
+    std::istringstream iss(s);
+    T bt;
+
+    iss >> bt;
+    return bt;
+  }
+
+  bool stop;
+  const std::string file;
+  prometheus::metric::gauge<T> mem;
+  std::thread updateThread;
+};
 }
 }
 
