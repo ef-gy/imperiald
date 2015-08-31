@@ -53,7 +53,7 @@ public:
         processes("system_forks_total", {}, pRegistry),
         runningProcesses("system_running_processes", {}, pRegistry),
         blockedProcesses("system_blocked_processes", {}, pRegistry),
-        CPUTime("system_cpu_user_hz", {"mode"}, pRegistry),
+        CPUTime("system_cpu_user_hz", {"mode", "cpu"}, pRegistry),
         pageIn("system_page_in_pages", {}, pRegistry),
         pageOut("system_page_out_pages", {}, pRegistry),
         swapIn("system_swap_in_pages", {}, pRegistry),
@@ -91,7 +91,8 @@ protected:
       static std::regex procs("processes ([0-9]+).*");
       static std::regex procs_running("procs_running ([0-9]+).*");
       static std::regex procs_blocked("procs_blocked ([0-9]+).*");
-      static std::regex cpu("cpu\\s+([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+).*");
+      static std::regex cpu(
+          "cpu([0-9]+)\\s+([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+).*");
       static std::regex page("page ([0-9]+) ([0-9]+).*");
       static std::regex swap("swap ([0-9]+) ([0-9]+).*");
       std::smatch matches;
@@ -109,10 +110,10 @@ protected:
       } else if (std::regex_match(line, matches, procs_blocked)) {
         blockedProcesses.set(asNumber(matches[1]));
       } else if (std::regex_match(line, matches, cpu)) {
-        CPUTime.labels({"user"}).set(asNumber(matches[1]));
-        CPUTime.labels({"nice"}).set(asNumber(matches[2]));
-        CPUTime.labels({"system"}).set(asNumber(matches[3]));
-        CPUTime.labels({"idle"}).set(asNumber(matches[4]));
+        CPUTime.labels({"user", matches[1]}).set(asNumber(matches[1]));
+        CPUTime.labels({"nice", matches[1]}).set(asNumber(matches[2]));
+        CPUTime.labels({"system", matches[1]}).set(asNumber(matches[3]));
+        CPUTime.labels({"idle", matches[1]}).set(asNumber(matches[4]));
       } else if (std::regex_match(line, matches, page)) {
         pageIn.set(asNumber(matches[1]));
         pageOut.set(asNumber(matches[2]));
