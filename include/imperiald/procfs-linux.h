@@ -44,24 +44,20 @@ public:
        prometheus::collector::registry<prometheus::collector::base> &pRegistry =
            prometheus::collector::registry<
                prometheus::collector::base>::common(),
-       const std::string &prefix = "system_",
        const std::string &pFile = "/proc/stat")
-      : file(pFile), prometheus::collector::hub(prefix + "linux_procfs_stats",
-                                                pRegistry, "hub"),
-        bootTime(prefix + "boot_time_seconds", pRegistry),
-        contextSwitches(prefix + "context_switches_total", pRegistry),
-        interrupts(prefix + "interrupts_total", pRegistry),
-        processes(prefix + "forks_total", pRegistry),
-        runningProcesses(prefix + "running_processes", pRegistry),
-        blockedProcesses(prefix + "blocked_processes", pRegistry),
-        userCPUTime(prefix + "cpu_user_user_hz", pRegistry),
-        niceCPUTime(prefix + "cpu_nice_user_hz", pRegistry),
-        systemCPUTime(prefix + "cpu_system_user_hz", pRegistry),
-        idleCPUTime(prefix + "cpu_idle_user_hz", pRegistry),
-        pageIn(prefix + "page_in_pages", pRegistry),
-        pageOut(prefix + "page_out_pages", pRegistry),
-        swapIn(prefix + "swap_in_pages", pRegistry),
-        swapOut(prefix + "swap_out_pages", pRegistry), stop(false) {
+      : file(pFile), prometheus::collector::hub("system_linux_procfs_stats",
+                                                "hub", {}, pRegistry),
+        bootTime("system_boot_time_seconds", {}, pRegistry),
+        contextSwitches("system_context_switches_total", {}, pRegistry),
+        interrupts("system_interrupts_total", {}, pRegistry),
+        processes("system_forks_total", {}, pRegistry),
+        runningProcesses("system_running_processes", {}, pRegistry),
+        blockedProcesses("system_blocked_processes", {}, pRegistry),
+        CPUTime("system_cpu_user_hz", {"mode"}, pRegistry),
+        pageIn("system_page_in_pages", {}, pRegistry),
+        pageOut("system_page_out_pages", {}, pRegistry),
+        swapIn("system_swap_in_pages", {}, pRegistry),
+        swapOut("system_swap_out_pages", {}, pRegistry), stop(false) {
     updateThread = std::thread([this, updateInterval]() {
       while (!stop) {
         update();
@@ -113,10 +109,10 @@ protected:
       } else if (std::regex_match(line, matches, procs_blocked)) {
         blockedProcesses.set(asNumber(matches[1]));
       } else if (std::regex_match(line, matches, cpu)) {
-        userCPUTime.set(asNumber(matches[1]));
-        niceCPUTime.set(asNumber(matches[2]));
-        systemCPUTime.set(asNumber(matches[3]));
-        idleCPUTime.set(asNumber(matches[4]));
+        CPUTime.labels({"user"}).set(asNumber(matches[1]));
+        CPUTime.labels({"nice"}).set(asNumber(matches[2]));
+        CPUTime.labels({"system"}).set(asNumber(matches[3]));
+        CPUTime.labels({"idle"}).set(asNumber(matches[4]));
       } else if (std::regex_match(line, matches, page)) {
         pageIn.set(asNumber(matches[1]));
         pageOut.set(asNumber(matches[2]));
@@ -137,10 +133,7 @@ protected:
   prometheus::metric::counter<T> processes;
   prometheus::metric::gauge<T> runningProcesses;
   prometheus::metric::gauge<T> blockedProcesses;
-  prometheus::metric::counter<T> userCPUTime;
-  prometheus::metric::counter<T> niceCPUTime;
-  prometheus::metric::counter<T> systemCPUTime;
-  prometheus::metric::counter<T> idleCPUTime;
+  prometheus::metric::counter<T> CPUTime;
   prometheus::metric::gauge<T> pageIn;
   prometheus::metric::gauge<T> pageOut;
   prometheus::metric::gauge<T> swapIn;
