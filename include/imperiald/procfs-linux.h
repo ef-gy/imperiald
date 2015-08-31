@@ -107,10 +107,10 @@ protected:
       } else if (std::regex_match(line, matches, procs_blocked)) {
         processes.labels({"blocked"}).set(asNumber(matches[1]));
       } else if (std::regex_match(line, matches, cpu)) {
-        CPUTime.labels({"user", matches[1]}).set(asNumber(matches[1]));
-        CPUTime.labels({"nice", matches[1]}).set(asNumber(matches[2]));
-        CPUTime.labels({"system", matches[1]}).set(asNumber(matches[3]));
-        CPUTime.labels({"idle", matches[1]}).set(asNumber(matches[4]));
+        CPUTime.labels({"user", matches[1]}).set(asNumber(matches[2]));
+        CPUTime.labels({"nice", matches[1]}).set(asNumber(matches[3]));
+        CPUTime.labels({"system", matches[1]}).set(asNumber(matches[4]));
+        CPUTime.labels({"idle", matches[1]}).set(asNumber(matches[5]));
       } else if (std::regex_match(line, matches, page)) {
         pages.labels({"in"}).set(asNumber(matches[1]));
         pages.labels({"out"}).set(asNumber(matches[2]));
