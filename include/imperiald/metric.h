@@ -26,8 +26,8 @@
  * \see Licence Terms: https://github.com/jyujin/imperiald/COPYING
  */
 
-#if !defined(IMPERIALD_PROCFS_METRIC_H)
-#define IMPERIALD_PROCFS_METRIC_H
+#if !defined(IMPERIALD_METRIC_H)
+#define IMPERIALD_METRIC_H
 
 #include <prometheus/metric.h>
 #include <fstream>
