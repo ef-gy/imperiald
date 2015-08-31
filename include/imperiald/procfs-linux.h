@@ -50,6 +50,7 @@ public:
         bootTime("system_boot_time_seconds", {}, pRegistry),
         contextSwitches("system_context_switches_total", {}, pRegistry),
         interrupts("system_interrupts_total", {}, pRegistry),
+        forks("system_forks_total", {"state"}, pRegistry),
         processes("system_processes", {"state"}, pRegistry),
         CPUTime("system_cpu_user_hz", {"mode", "cpu"}, pRegistry),
         pages("system_paging_pages", {"io"}, pRegistry),
@@ -100,7 +101,7 @@ protected:
       } else if (std::regex_match(line, matches, intr)) {
         interrupts.set(asNumber(matches[1]));
       } else if (std::regex_match(line, matches, procs)) {
-        processes.set(asNumber(matches[1]));
+        forks.set(asNumber(matches[1]));
       } else if (std::regex_match(line, matches, procs_running)) {
         processes.labels({"running"}).set(asNumber(matches[1]));
       } else if (std::regex_match(line, matches, procs_blocked)) {
@@ -128,6 +129,7 @@ protected:
   prometheus::metric::counter<T> contextSwitches;
   prometheus::metric::counter<T> interrupts;
   prometheus::metric::gauge<T> processes;
+  prometheus::metric::counter<T> forks;
   prometheus::metric::counter<T> CPUTime;
   prometheus::metric::gauge<T> pages;
   prometheus::metric::gauge<T> swaps;
