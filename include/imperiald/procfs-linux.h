@@ -45,16 +45,15 @@ public:
            prometheus::collector::registry<
                prometheus::collector::base>::common(),
        const std::string &pFile = "/proc/stat")
-      : file(pFile), prometheus::collector::hub("system_linux_procfs_stats",
-                                                "hub", {}, pRegistry),
-        bootTime("system_boot_time_seconds", {}, pRegistry),
-        contextSwitches("system_context_switches_total", {}, pRegistry),
-        interrupts("system_interrupts_total", {}, pRegistry),
-        forks("system_forks_total", {"state"}, pRegistry),
-        processes("system_processes", {"state"}, pRegistry),
-        CPUTime("system_cpu_user_hz", {"mode", "cpu"}, pRegistry),
-        pages("system_paging_pages", {"io"}, pRegistry),
-        swaps("system_swapping_pages", {"io"}, pRegistry) {
+      : file(pFile), prometheus::collector::hub(pRegistry),
+        bootTime("system_boot_time_seconds", {}, *this),
+        contextSwitches("system_context_switches_total", {}, *this),
+        interrupts("system_interrupts_total", {}, *this),
+        forks("system_forks_total", {"state"}, *this),
+        processes("system_processes", {"state"}, *this),
+        CPUTime("system_cpu_user_hz", {"mode", "cpu"}, *this),
+        pages("system_paging_pages", {"io"}, *this),
+        swaps("system_swapping_pages", {"io"}, *this) {
     updateThread = std::thread([this, updateInterval]() {
       while (!stop) {
         update();
