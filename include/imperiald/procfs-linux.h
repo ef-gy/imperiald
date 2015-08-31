@@ -50,14 +50,10 @@ public:
         bootTime("system_boot_time_seconds", {}, pRegistry),
         contextSwitches("system_context_switches_total", {}, pRegistry),
         interrupts("system_interrupts_total", {}, pRegistry),
-        processes("system_forks_total", {}, pRegistry),
-        runningProcesses("system_running_processes", {}, pRegistry),
-        blockedProcesses("system_blocked_processes", {}, pRegistry),
+        processes("system_processes", {"state"}, pRegistry),
         CPUTime("system_cpu_user_hz", {"mode", "cpu"}, pRegistry),
-        pageIn("system_page_in_pages", {}, pRegistry),
-        pageOut("system_page_out_pages", {}, pRegistry),
-        swapIn("system_swap_in_pages", {}, pRegistry),
-        swapOut("system_swap_out_pages", {}, pRegistry), stop(false) {
+        pages("system_paging_pages", {"io"}, pRegistry),
+        swaps("system_swapping_pages", {"io"}, pRegistry) {
     updateThread = std::thread([this, updateInterval]() {
       while (!stop) {
         update();
@@ -106,20 +102,20 @@ protected:
       } else if (std::regex_match(line, matches, procs)) {
         processes.set(asNumber(matches[1]));
       } else if (std::regex_match(line, matches, procs_running)) {
-        runningProcesses.set(asNumber(matches[1]));
+        processes.labels({"running"}).set(asNumber(matches[1]));
       } else if (std::regex_match(line, matches, procs_blocked)) {
-        blockedProcesses.set(asNumber(matches[1]));
+        processes.labels({"blocked"}).set(asNumber(matches[1]));
       } else if (std::regex_match(line, matches, cpu)) {
         CPUTime.labels({"user", matches[1]}).set(asNumber(matches[1]));
         CPUTime.labels({"nice", matches[1]}).set(asNumber(matches[2]));
         CPUTime.labels({"system", matches[1]}).set(asNumber(matches[3]));
         CPUTime.labels({"idle", matches[1]}).set(asNumber(matches[4]));
       } else if (std::regex_match(line, matches, page)) {
-        pageIn.set(asNumber(matches[1]));
-        pageOut.set(asNumber(matches[2]));
+        pages.labels({"in"}).set(asNumber(matches[1]));
+        pages.labels({"out"}).set(asNumber(matches[2]));
       } else if (std::regex_match(line, matches, swap)) {
-        swapIn.set(asNumber(matches[1]));
-        swapOut.set(asNumber(matches[2]));
+        swaps.labels({"in"}).set(asNumber(matches[1]));
+        swaps.labels({"out"}).set(asNumber(matches[2]));
       }
     }
 
@@ -131,14 +127,10 @@ protected:
   prometheus::metric::counter<T> bootTime;
   prometheus::metric::counter<T> contextSwitches;
   prometheus::metric::counter<T> interrupts;
-  prometheus::metric::counter<T> processes;
-  prometheus::metric::gauge<T> runningProcesses;
-  prometheus::metric::gauge<T> blockedProcesses;
+  prometheus::metric::gauge<T> processes;
   prometheus::metric::counter<T> CPUTime;
-  prometheus::metric::gauge<T> pageIn;
-  prometheus::metric::gauge<T> pageOut;
-  prometheus::metric::gauge<T> swapIn;
-  prometheus::metric::gauge<T> swapOut;
+  prometheus::metric::gauge<T> pages;
+  prometheus::metric::gauge<T> swaps;
   std::thread updateThread;
 };
 }
