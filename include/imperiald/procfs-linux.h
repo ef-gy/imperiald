@@ -31,6 +31,8 @@
 
 #include <imperiald/metric.h>
 #include <regex>
+#include <algorithm>
+#include <iterator>
 
 namespace imperiald {
 namespace linux {
@@ -54,7 +56,7 @@ public:
 protected:
   using metric::file<T>::asNumber;
 
-  bool processLine(std::string &line) {
+  virtual bool processLine(std::string &line) {
     static std::regex btime("btime ([0-9]+).*");
     static std::regex ctxt("ctxt ([0-9]+).*");
     static std::regex intr("intr ([0-9]+).*");
@@ -118,7 +120,7 @@ public:
 protected:
   using metric::file<T>::asNumber;
 
-  bool processLine(std::string &line) {
+  virtual bool processLine(std::string &line) {
     static std::regex mi("(.*):\\s+([0-9]+)\\s+kB");
     std::smatch matches;
 
@@ -130,6 +132,48 @@ protected:
   }
 
   prometheus::metric::gauge<T> mem;
+};
+
+template <typename T = long long> class netstat : public metric::file<T> {
+public:
+  netstat(const T &updateInterval,
+          prometheus::collector::registry<prometheus::collector::base> &
+              pRegistry = prometheus::collector::registry<
+                  prometheus::collector::base>::common(),
+          const std::string &pFile = "/proc/net/netstat")
+      : metric::file<T>(updateInterval, pFile, pRegistry),
+        net("system_netstat", {"ext", "property"}, *this) {}
+
+protected:
+  using metric::file<T>::asNumber;
+
+  virtual bool processLine(std::string &line) {
+    static std::regex header("(.*):((\\s+[a-zA-Z0-9]+)+)\\s*");
+    static std::regex value("(.*):((\\s+[0-9]+)+)\\s*");
+    std::smatch matches;
+
+    if (std::regex_match(line, matches, value)) {
+      std::istringstream iss(matches[2]);
+      std::vector<std::string> values{std::istream_iterator<std::string>{iss},
+                                      std::istream_iterator<std::string>{}};
+
+      const auto &ext = matches[1];
+      const auto &h = headers[ext];
+      for (int i = 0; i < values.size() && i < h.size(); i++) {
+        net.labels({ext, h[i]}).set(asNumber(values[i]));
+      }
+    } else if (std::regex_match(line, matches, header)) {
+      std::istringstream iss(matches[2]);
+      headers[matches[1]] =
+          std::vector<std::string>{std::istream_iterator<std::string>{iss},
+                                   std::istream_iterator<std::string>{}};
+    }
+
+    return true;
+  }
+
+  prometheus::metric::gauge<T> net;
+  std::map<std::string, std::vector<std::string>> headers;
 };
 }
 }

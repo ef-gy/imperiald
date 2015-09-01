@@ -48,6 +48,7 @@ using namespace efgy;
 
 static imperiald::linux::stat<> linux_procfs_stats(1);
 static imperiald::linux::meminfo<> linux_procfs_meminfo(1);
+static imperiald::linux::netstat<> linux_procfs_netstat(1);
 
 static httpd::servlet<asio::ip::tcp> TCPQuit("^/quit$",
                                              httpd::quit<asio::ip::tcp>);
