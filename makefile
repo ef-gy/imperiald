@@ -15,5 +15,3 @@ include/ef.gy/base.mk: .third-party/libefgy/include/ef.gy/base.mk
 
 include/prometheus/version.h: .third-party/prometheus-client-cpp/include/prometheus/version.h
 	ln -sfn ../.third-party/prometheus-client-cpp/include/prometheus include/prometheus
-
-server src/server.cpp: include/asio.hpp include/prometheus/version.h
