@@ -37,8 +37,8 @@
  * THE SOFTWARE.
  *
  * \see Documentation: https://ef.gy/documentation/imperiald
- * \see Source Code: https://github.com/jyujin/imperiald
- * \see Licence Terms: https://github.com/jyujin/imperiald/COPYING
+ * \see Source Code: https://github.com/ef-gy/imperiald
+ * \see Licence Terms: https://github.com/ef-gy/imperiald/COPYING
  */
 
 #include <prometheus/httpd.h>

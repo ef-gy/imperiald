@@ -11,7 +11,7 @@ include/ef.gy/base.mk: .third-party/libefgy/include/ef.gy/base.mk
 
 .third-party/prometheus-client-cpp/include/prometheus/version.h:
 	mkdir .third-party || true
-	cd .third-party && git clone git://github.com/jyujin/prometheus-client-cpp.git
+	cd .third-party && git clone git://github.com/ef-gy/prometheus-client-cpp.git
 
 include/prometheus/version.h: .third-party/prometheus-client-cpp/include/prometheus/version.h
 	ln -sfn ../.third-party/prometheus-client-cpp/include/prometheus include/prometheus
