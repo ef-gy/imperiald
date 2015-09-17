@@ -54,8 +54,6 @@ public:
         swaps("system_swapping_pages", {"io"}, *this) {}
 
 protected:
-  using metric::file<T>::asNumber;
-
   virtual bool processLine(std::string &line) {
     static std::regex btime("btime ([0-9]+).*");
     static std::regex ctxt("ctxt ([0-9]+).*");
@@ -70,28 +68,28 @@ protected:
     std::smatch matches;
 
     if (std::regex_match(line, matches, btime)) {
-      bootTime.set(asNumber(matches[1]));
+      bootTime.set(std::stoll(matches[1]));
     } else if (std::regex_match(line, matches, ctxt)) {
-      contextSwitches.set(asNumber(matches[1]));
+      contextSwitches.set(std::stoll(matches[1]));
     } else if (std::regex_match(line, matches, intr)) {
-      interrupts.set(asNumber(matches[1]));
+      interrupts.set(std::stoll(matches[1]));
     } else if (std::regex_match(line, matches, procs)) {
-      forks.set(asNumber(matches[1]));
+      forks.set(std::stoll(matches[1]));
     } else if (std::regex_match(line, matches, procs_running)) {
-      processes.labels({"running"}).set(asNumber(matches[1]));
+      processes.labels({"running"}).set(std::stoll(matches[1]));
     } else if (std::regex_match(line, matches, procs_blocked)) {
-      processes.labels({"blocked"}).set(asNumber(matches[1]));
+      processes.labels({"blocked"}).set(std::stoll(matches[1]));
     } else if (std::regex_match(line, matches, cpu)) {
-      CPUTime.labels({"user", matches[1]}).set(asNumber(matches[2]));
-      CPUTime.labels({"nice", matches[1]}).set(asNumber(matches[3]));
-      CPUTime.labels({"system", matches[1]}).set(asNumber(matches[4]));
-      CPUTime.labels({"idle", matches[1]}).set(asNumber(matches[5]));
+      CPUTime.labels({"user", matches[1]}).set(std::stoll(matches[2]));
+      CPUTime.labels({"nice", matches[1]}).set(std::stoll(matches[3]));
+      CPUTime.labels({"system", matches[1]}).set(std::stoll(matches[4]));
+      CPUTime.labels({"idle", matches[1]}).set(std::stoll(matches[5]));
     } else if (std::regex_match(line, matches, page)) {
-      pages.labels({"in"}).set(asNumber(matches[1]));
-      pages.labels({"out"}).set(asNumber(matches[2]));
+      pages.labels({"in"}).set(std::stoll(matches[1]));
+      pages.labels({"out"}).set(std::stoll(matches[2]));
     } else if (std::regex_match(line, matches, swap)) {
-      swaps.labels({"in"}).set(asNumber(matches[1]));
-      swaps.labels({"out"}).set(asNumber(matches[2]));
+      swaps.labels({"in"}).set(std::stoll(matches[1]));
+      swaps.labels({"out"}).set(std::stoll(matches[2]));
     }
 
     return true;
@@ -118,14 +116,12 @@ public:
         mem("system_memory_kibibytes", {"property"}, *this) {}
 
 protected:
-  using metric::file<T>::asNumber;
-
   virtual bool processLine(std::string &line) {
     static std::regex mi("(.*):\\s+([0-9]+)\\s+kB");
     std::smatch matches;
 
     if (std::regex_match(line, matches, mi)) {
-      mem.labels({matches[1]}).set(asNumber(matches[2]));
+      mem.labels({matches[1]}).set(std::stoll(matches[2]));
     }
 
     return true;
@@ -145,8 +141,6 @@ public:
         net("system_netstat", {"ext", "property"}, *this) {}
 
 protected:
-  using metric::file<T>::asNumber;
-
   virtual bool processLine(std::string &line) {
     static std::regex header("(.*):((\\s+[a-zA-Z0-9]+)+)\\s*");
     static std::regex value("(.*):((\\s+[0-9]+)+)\\s*");
@@ -160,7 +154,7 @@ protected:
       const auto &ext = matches[1];
       const auto &h = headers[ext];
       for (int i = 0; i < values.size() && i < h.size(); i++) {
-        net.labels({ext, h[i]}).set(asNumber(values[i]));
+        net.labels({ext, h[i]}).set(std::stoll(values[i]));
       }
     } else if (std::regex_match(line, matches, header)) {
       std::istringstream iss(matches[2]);

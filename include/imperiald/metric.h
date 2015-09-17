@@ -71,14 +71,6 @@ protected:
     return true;
   }
 
-  static T asNumber(const std::string &s) {
-    std::istringstream iss(s);
-    T bt;
-
-    iss >> bt;
-    return bt;
-  }
-
   bool stop;
   std::thread updateThread;
   const std::string source;
