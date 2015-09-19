@@ -4,4 +4,6 @@ include/prometheus
 include/asio*
 .third-party
 *.tag
-server
+doxyfile
+imperiald
+documentation
