@@ -21,12 +21,11 @@ namespace imperiald {
 namespace linux {
 template <typename T = long long> class stat : public metric::file<T> {
 public:
-  stat(const T &updateInterval,
-       prometheus::collector::registry<prometheus::collector::base> &pRegistry =
+  stat(prometheus::collector::registry<prometheus::collector::base> &pRegistry =
            prometheus::collector::registry<
                prometheus::collector::base>::common(),
        const std::string &pFile = "/proc/stat")
-      : metric::file<T>(updateInterval, pFile, pRegistry),
+      : metric::file<T>(pFile, pRegistry),
         bootTime("system_boot_time_seconds", {}, *this),
         contextSwitches("system_context_switches_total", {}, *this),
         interrupts("system_interrupts_total", {}, *this),
@@ -90,12 +89,11 @@ protected:
 
 template <typename T = long long> class meminfo : public metric::file<T> {
 public:
-  meminfo(const T &updateInterval,
-          prometheus::collector::registry<prometheus::collector::base> &
+  meminfo(prometheus::collector::registry<prometheus::collector::base> &
               pRegistry = prometheus::collector::registry<
                   prometheus::collector::base>::common(),
           const std::string &pFile = "/proc/meminfo")
-      : metric::file<T>(updateInterval, pFile, pRegistry),
+      : metric::file<T>(pFile, pRegistry),
         mem("system_memory_kibibytes", {"property"}, *this) {}
 
 protected:
@@ -115,12 +113,11 @@ protected:
 
 template <typename T = long long> class netstat : public metric::file<T> {
 public:
-  netstat(const T &updateInterval,
-          prometheus::collector::registry<prometheus::collector::base> &
+  netstat(prometheus::collector::registry<prometheus::collector::base> &
               pRegistry = prometheus::collector::registry<
                   prometheus::collector::base>::common(),
           const std::string &pFile = "/proc/net/netstat")
-      : metric::file<T>(updateInterval, pFile, pRegistry),
+      : metric::file<T>(pFile, pRegistry),
         net("system_netstat", {"ext", "property"}, *this) {}
 
 protected:

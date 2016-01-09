@@ -24,18 +24,17 @@
  * \see Licence Terms: https://github.com/ef-gy/imperiald/COPYING
  */
 
+#define ASIO_DISABLE_THREADS
 #include <prometheus/httpd.h>
 #include <imperiald/procfs-linux.h>
 
 using namespace efgy;
 
-static imperiald::linux::stat<> linux_procfs_stats(1);
-static imperiald::linux::meminfo<> linux_procfs_meminfo(1);
-static imperiald::linux::netstat<> linux_procfs_netstat(1);
+static imperiald::linux::stat<> linux_procfs_stats;
+static imperiald::linux::meminfo<> linux_procfs_meminfo;
+static imperiald::linux::netstat<> linux_procfs_netstat;
 
-static httpd::servlet<asio::ip::tcp> TCPQuit("^/quit$",
-                                             httpd::quit<asio::ip::tcp>);
 static httpd::servlet<asio::local::stream_protocol>
-    unixQuit("^/quit$", httpd::quit<asio::local::stream_protocol>);
+    unixQuit("/quit", httpd::quit<asio::local::stream_protocol>);
 
 int main(int argc, char *argv[]) { return io::main(argc, argv); }

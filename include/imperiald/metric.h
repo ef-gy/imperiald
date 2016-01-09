@@ -22,26 +22,19 @@ namespace metric {
 template <typename T = long long>
 class file : public prometheus::collector::hub {
 public:
-  file(const T &updateInterval, const std::string &pFile,
+  file(const std::string &pFile,
        prometheus::collector::registry<prometheus::collector::base> &pRegistry =
            prometheus::collector::registry<
                prometheus::collector::base>::common())
-      : stop(false), source(pFile), prometheus::collector::hub(pRegistry) {
-    updateThread = std::thread([this, updateInterval]() {
-      while (!stop) {
-        update();
-        std::this_thread::sleep_for(std::chrono::seconds(updateInterval));
-      }
-    });
-  }
+      : source(pFile), prometheus::collector::hub(pRegistry) {}
 
-  virtual ~file() {
-    stop = true;
-    updateThread.join();
+  virtual std::string text(void) const {
+    /* note that we're being delibrately evil here: yes, we normally want this
+     * function to be const, but in this case it saves us a thread to not be.
+     */
+    ((file*)(this))->update();
+    return prometheus::collector::hub::text();
   }
-
-protected:
-  virtual bool processLine(std::string &) = 0;
 
   bool update(void) {
     std::ifstream i(source);
@@ -54,8 +47,9 @@ protected:
     return true;
   }
 
-  bool stop;
-  std::thread updateThread;
+protected:
+  virtual bool processLine(std::string &) = 0;
+
   const std::string source;
 };
 }
