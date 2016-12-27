@@ -1,8 +1,4 @@
 dependencies.mk
-include/ef.gy
-include/prometheus
-include/asio*
-.third-party
 *.tag
 doxyfile
 imperiald
